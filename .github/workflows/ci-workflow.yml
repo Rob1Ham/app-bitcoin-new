@@ -269,6 +269,16 @@ jobs:
                 exit 1
             fi
 
+      - name: Check that tagged commit belongs to a protected branch
+        run: |
+            git fetch --no-tags origin master develop
+            if git merge-base --is-ancestor "$GITHUB_SHA" origin/master || git merge-base --is-ancestor "$GITHUB_SHA" origin/develop; then
+                echo "[INFO] Tagged commit is present on a protected branch. Continuing."
+            else
+                echo "[ERROR] Tagged commit is not present on origin/master or origin/develop. Aborting."
+                exit 1
+            fi
+
   deploy_js_client:
     name: Deploy
     needs: deploy_js_client_check_tag

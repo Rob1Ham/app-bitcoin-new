@@ -170,24 +170,24 @@ execute_swap_checks(dispatcher_context_t *dc, sign_psbt_state_t *st) {
         finalize_exchange_sign_transaction(false);
     }
 
-    // Compute this output's address
+    // Compute this output's address. For swap destination enforcement, only address
+    // scripts are acceptable (e.g. OP_RETURN descriptions must not pass).
     char output_description[MAX_OUTPUT_SCRIPT_DESC_SIZE];
+    int output_address_len = get_script_address(st->outputs.output_scripts[swap_dest_idx],
+                                                st->outputs.output_script_lengths[swap_dest_idx],
+                                                output_description,
+                                                sizeof(output_description));
 
-    if (!format_script(st->outputs.output_scripts[swap_dest_idx],
-                       st->outputs.output_script_lengths[swap_dest_idx],
-                       output_description)) {
-        PRINTF("Invalid or unsupported script for external output\n");
+    if (output_address_len < 0) {
+        PRINTF("Invalid or unsupported address script for external output\n");
         SEND_SW_EC(dc, SW_FAIL_SWAP, EC_SWAP_ERROR_WRONG_METHOD_WRONG_UNSUPPORTED_OUTPUT);
         finalize_exchange_sign_transaction(false);
     }
 
-    size_t output_description_len = strlen(output_description);
-
     // Check that the external output's address matches the request from app-exchange
     size_t swap_addr_len = strlen(G_swap_state.destination_address);
-    if (swap_addr_len != output_description_len ||
-        0 !=
-            strncmp(G_swap_state.destination_address, output_description, output_description_len)) {
+    if (swap_addr_len != (size_t) output_address_len ||
+        0 != strncmp(G_swap_state.destination_address, output_description, (size_t) output_address_len)) {
         // address did not match
         PRINTF("Mismatching address for swap\n");
         PRINTF("Expected: ");
@@ -196,7 +196,7 @@ execute_swap_checks(dispatcher_context_t *dc, sign_psbt_state_t *st) {
         }
         PRINTF("\n");
         PRINTF("Found: ");
-        for (size_t i = 0; i < output_description_len; i++) {
+        for (size_t i = 0; i < (size_t) output_address_len; i++) {
             PRINTF("%c", output_description[i]);
         }
         PRINTF("\n");

@@ -35,6 +35,19 @@ impl<T: Transport> BitcoinClient<T> {
         Self { transport }
     }
 
+    async fn validate_policy(
+        &self,
+        wallet: &WalletPolicy,
+    ) -> Result<(), BitcoinClientError<T::Error>> {
+        if wallet.contains_minscript_a() {
+            let (_, app_version, _) = self.get_version().await?;
+            if app_version == "2.1.0" || app_version == "2.1.1" {
+                return Err(BitcoinClientError::UnsupportedAppVersion);
+            }
+        }
+        Ok(())
+    }
+
     async fn make_request(
         &self,
         req: &APDUCommand,
@@ -274,6 +287,8 @@ impl<T: Transport> BitcoinClient<T> {
         wallet: &WalletPolicy,
         wallet_hmac: Option<&[u8; 32]>,
     ) -> Result<Vec<(usize, SignPsbtYieldedObject)>, BitcoinClientError<T::Error>> {
+        self.validate_policy(wallet).await?;
+
         let mut intpr = ClientCommandInterpreter::new();
         intpr.add_known_preimage(wallet.serialize());
         let keys: Vec<String> = wallet.keys.iter().map(|k| k.to_string()).collect();

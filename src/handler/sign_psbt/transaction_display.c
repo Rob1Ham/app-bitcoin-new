@@ -220,8 +220,8 @@ bool __attribute__((noinline)) display_transaction(
      * - non-default sighash types
      */
 
-    // if the value of fees is 10% or more of the amount, and it's more than 100000
-    st->warnings.high_fee = 10 * fee >= st->inputs_total_amount && st->inputs_total_amount > 100000;
+    // if the value of fees is 10% or more of the amount, and it's more than 10000
+    st->warnings.high_fee = 10 * fee >= st->inputs_total_amount && st->inputs_total_amount > 10000;
 
     // Display warnings/risks information before the transaction title
     // for the both classical and streaming cases.

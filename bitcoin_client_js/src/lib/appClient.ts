@@ -66,6 +66,10 @@ function makePartialSignature(pubkeyAugm: Buffer, signature: Buffer): PartialSig
   }
 }
 
+function containsA(descriptorTemplate: string): boolean {
+  return descriptorTemplate.includes("a:");
+}
+
 /**
  * This class encapsulates the APDU protocol documented at
  * https://github.com/LedgerHQ/app-bitcoin-new/blob/master/doc/bitcoin.md
@@ -179,6 +183,7 @@ export class AppClient {
   async registerWallet(
     walletPolicy: WalletPolicy
   ): Promise<readonly [Buffer, Buffer]> {
+    await this.validatePolicy(walletPolicy);
 
     const clientInterpreter = new ClientCommandInterpreter();
 
@@ -285,6 +290,7 @@ export class AppClient {
     walletHMAC: Buffer | null,
     progressCallback?: () => void
   ): Promise<[number, PartialSignature][]> {
+    await this.validatePolicy(walletPolicy);
 
     if (typeof psbt === 'string') {
       psbt = Buffer.from(psbt, "base64");
@@ -468,6 +474,24 @@ export class AppClient {
       throw new Error(
         `Third party address validation mismatch: ${address} != ${thirdPartyGeneratedAddress}`
       );
+  }
+
+  private async validatePolicy(walletPolicy: WalletPolicy) {
+    let appAndVer: { name: string; version: string; flags: number | Buffer } | undefined;
+
+    if (containsA(walletPolicy.descriptorTemplate)) {
+      appAndVer = appAndVer || await this.getAppAndVersion();
+      if (["2.1.0", "2.1.1"].includes(appAndVer.version)) {
+        throw new Error("Please update your Ledger Bitcoin app.");
+      }
+    }
+
+    if (walletPolicy.descriptorTemplate.includes("thresh(1,")) {
+      appAndVer = appAndVer || await this.getAppAndVersion();
+      if (["2.1.0", "2.1.1", "2.1.2"].includes(appAndVer.version)) {
+        throw new Error("Please update your Ledger Bitcoin app.");
+      }
+    }
   }
 }
 

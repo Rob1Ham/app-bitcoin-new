@@ -8,8 +8,13 @@ on:
     - develop
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   job_functional_tests:
+    permissions:
+      contents: read
     uses: LedgerHQ/app-exchange/.github/workflows/reusable_swap_functional_tests.yml@develop
     with:
       branch_for_bitcoin: ${{ github.ref }}

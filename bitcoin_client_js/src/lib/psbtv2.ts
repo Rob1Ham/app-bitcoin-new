@@ -498,7 +498,7 @@ export class PsbtV2 {
         this.setInputWitnessScript(index, asBuffer(input.witnessScript));
       if (input.redeemScript)
         this.setInputRedeemScript(index, asBuffer(input.redeemScript));
-      psbtBJS.data.inputs[index].bip32Derivation.forEach(derivation => {
+      (input.bip32Derivation ?? []).forEach(derivation => {
         if (!/^m\//i.test(derivation.path))
           throw new Error(`Invalid input bip32 derivation`);
         const pathArray = derivation.path

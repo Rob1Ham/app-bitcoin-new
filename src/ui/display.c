@@ -73,6 +73,7 @@ static bool io_ui_process(dispatcher_context_t *context) {
     G_dispatcher_context.set_ui_dirty();
 
     g_ux_flow_ended = false;
+    g_ux_flow_response = false;
 
     // We are not waiting for the client's input, nor we are doing computations on the device
     ioe_clear_processing_timeout();
@@ -93,7 +94,7 @@ static bool io_ui_process(dispatcher_context_t *context) {
     // We're back at work, we want to show the "Processing..." screen when appropriate
     ioe_start_processing_timeout();
 
-    return g_ux_flow_response;
+    return g_ux_flow_ended && g_ux_flow_response;
 }
 
 bool ui_display_pubkey(dispatcher_context_t *context,

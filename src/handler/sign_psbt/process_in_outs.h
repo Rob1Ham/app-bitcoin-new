@@ -37,6 +37,8 @@ typedef struct {
     uint32_t fingerprint;
     size_t derivation_len;
     uint32_t key_origin[MAX_BIP32_PATH_STEPS];
+    uint8_t pubkey[33];
+    size_t pubkey_len;
 } derivation_info_t;
 
 /**

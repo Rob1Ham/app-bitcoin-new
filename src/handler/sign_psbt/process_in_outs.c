@@ -26,6 +26,7 @@
 #include "constants.h"
 #include "dispatcher.h"
 #include "extract_bip32_derivation.h"
+#include "key.h"
 #include "psbt.h"
 
 int read_change_and_index_from_psbt_bip32_derivation(
@@ -49,6 +50,9 @@ int read_change_and_index_from_psbt_bip32_derivation(
         PRINTF("Unexpected pubkey length\n");
         return -1;
     }
+
+    memcpy(derivation_info->pubkey, bip32_derivation_pubkey, key_len);
+    derivation_info->pubkey_len = key_len;
 
     // get the corresponding value in the values Merkle tree,
     // then fetch the bip32 path from the field
@@ -95,6 +99,26 @@ bool is_keyexpr_compatible_with_derivation_info(const keyexpr_info_t *keyexpr_in
     uint32_t change_step = derivation_info->key_origin[derivation_info->derivation_len - 2];
     if (change_step != keyexpr_info->key_expression_ptr->num_first &&
         change_step != keyexpr_info->key_expression_ptr->num_second) {
+        return false;
+    }
+
+    uint32_t address_index = derivation_info->key_origin[derivation_info->derivation_len - 1];
+    serialized_extended_pubkey_t child;
+    serialized_extended_pubkey_t derived;
+    if (0 > bip32_CKDpub(&keyexpr_info->pubkey, change_step, &child, NULL) ||
+        0 > bip32_CKDpub(&child, address_index, &derived, NULL)) {
+        return false;
+    }
+
+    if (derivation_info->pubkey_len == 33) {
+        if (memcmp(derived.compressed_pubkey, derivation_info->pubkey, 33) != 0) {
+            return false;
+        }
+    } else if (derivation_info->pubkey_len == 32) {
+        if (memcmp(derived.compressed_pubkey + 1, derivation_info->pubkey, 32) != 0) {
+            return false;
+        }
+    } else {
         return false;
     }
     return true;

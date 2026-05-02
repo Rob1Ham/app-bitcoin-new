@@ -366,11 +366,22 @@ impl<T: Transport> BitcoinClient<T> {
     ) -> Result<(u8, Signature), BitcoinClientError<T::Error>> {
         let chunks: Vec<&[u8]> = message.chunks(64).collect();
         let mut intpr = ClientCommandInterpreter::new();
-        let message_commitment_root = intpr.add_known_list(&chunks);
+        let message_commitment_root = if chunks.is_empty() {
+            [0u8; 32]
+        } else {
+            intpr.add_known_list(&chunks)
+        };
         let cmd = command::sign_message(message.len(), &message_commitment_root, path);
         self.make_request(&cmd, Some(&mut intpr))
             .await
             .and_then(|data| {
+                if data.len() != 65 {
+                    return Err(BitcoinClientError::UnexpectedResult {
+                        command: cmd.ins,
+                        data: data.to_vec(),
+                    });
+                }
+
                 Ok((
                     data[0],
                     Signature::from_compact(&data[1..]).map_err(|_| {

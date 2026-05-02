@@ -159,6 +159,8 @@ impl WalletPolicy {
                 } else {
                     return Err(WalletError::InvalidPolicy);
                 }
+            } else {
+                return Err(WalletError::InvalidPolicy);
             }
         }
 
@@ -345,6 +347,21 @@ mod tests {
         assert_eq!(wallet.serialize().as_slice(), Vec::<u8>::from_hex("020c436f6c642073746f726167651fb56c3d5542fa09b3956834a9ff6a1df5c36a38e5b02c63c54b41a9a04403b82602516d2c50a89476ecffeec658057f0110674bbfafc18797dc480c7ed53802f3fb").unwrap());
     }
 
+
+    #[test]
+    fn test_get_descriptor_invalid_multipath_expression() {
+        let wallet = WalletPolicy::new(
+            "Cold storage".to_string(),
+            Version::V2,
+            "wsh(pk(@0/<0;1/*))".to_string(),
+            vec![
+                WalletPubKey::from_str("[76223a6e/48'/1'/0'/2']tpubDE7NQymr4AFtewpAsWtnreyq9ghkzQBXpCZjWLFVRAvnbf7vya2eMTvT2fPapNqL8SuVvLQdbUbMfWLVDCZKnsEBqp6UK93QEzL8Ck23AwF").unwrap(),
+            ],
+        );
+
+        assert!(matches!(wallet.get_descriptor(false), Err(WalletError::InvalidPolicy)));
+        assert!(matches!(wallet.get_descriptor(true), Err(WalletError::InvalidPolicy)));
+    }
     #[test]
     fn test_get_descriptor() {
         let wallet = WalletPolicy::new(

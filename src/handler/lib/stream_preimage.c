@@ -61,7 +61,10 @@ int call_stream_preimage(dispatcher_context_t *dispatcher_context,
     cx_sha256_t hash_context;
     cx_sha256_init(&hash_context);
     // update hash
-    crypto_hash_update(&hash_context.header, data_ptr, partial_data_len);
+    if (crypto_hash_update(&hash_context.header, data_ptr, partial_data_len) < 0) {
+        PRINTF("Hash update failed.\n");
+        return -12;
+    }
 
     // call callback with data
     buffer_t initial_buf = buffer_create(data_ptr + 1, partial_data_len - 1);  // skip 0x00 prefix
@@ -100,7 +103,10 @@ int call_stream_preimage(dispatcher_context_t *dispatcher_context,
         data_ptr = dispatcher_context->read_buffer.ptr + dispatcher_context->read_buffer.offset;
 
         // update hash
-        crypto_hash_update(&hash_context.header, data_ptr, n_bytes);
+        if (crypto_hash_update(&hash_context.header, data_ptr, n_bytes) < 0) {
+            PRINTF("Hash update failed.\n");
+            return -12;
+        }
 
         // call callback with data
         buffer_t buf = buffer_create(data_ptr, n_bytes);
@@ -111,7 +117,10 @@ int call_stream_preimage(dispatcher_context_t *dispatcher_context,
 
     uint8_t computed_hash[32];
 
-    crypto_hash_digest(&hash_context.header, computed_hash, 32);
+    if (crypto_hash_digest(&hash_context.header, computed_hash, 32) < 0) {
+        PRINTF("Hash finalization failed.\n");
+        return -13;
+    }
 
     if (memcmp(computed_hash, hash, 32) != 0) {
         PRINTF("Hash mismatch.\n");

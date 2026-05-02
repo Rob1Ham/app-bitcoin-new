@@ -62,7 +62,10 @@ int call_get_preimage(dispatcher_context_t *dispatcher_context,
     cx_sha256_t hash_context;
     cx_sha256_init(&hash_context);
     // update hash
-    crypto_hash_update(&hash_context.header, data_ptr, partial_data_len);
+    if (crypto_hash_update(&hash_context.header, data_ptr, partial_data_len) < 0) {
+        PRINTF("Hash update failed.\n");
+        return -12;
+    }
 
     // write to output buffer
 
@@ -103,7 +106,10 @@ int call_get_preimage(dispatcher_context_t *dispatcher_context,
         data_ptr = dispatcher_context->read_buffer.ptr + dispatcher_context->read_buffer.offset;
 
         // update hash
-        crypto_hash_update(&hash_context.header, data_ptr, n_bytes);
+        if (crypto_hash_update(&hash_context.header, data_ptr, n_bytes) < 0) {
+            PRINTF("Hash update failed.\n");
+            return -12;
+        }
 
         if (!buffer_write_bytes(&buffer_out, data_ptr, n_bytes)) {
             return -11;
@@ -114,7 +120,10 @@ int call_get_preimage(dispatcher_context_t *dispatcher_context,
 
     uint8_t computed_hash[32];
 
-    crypto_hash_digest(&hash_context.header, computed_hash, 32);
+    if (crypto_hash_digest(&hash_context.header, computed_hash, 32) < 0) {
+        PRINTF("Hash finalization failed.\n");
+        return -13;
+    }
 
     if (memcmp(computed_hash, hash, 32) != 0) {
         PRINTF("Hash mismatch.\n");

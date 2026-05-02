@@ -165,6 +165,9 @@ class PartiallySignedInput:
         self.sequence = None
         self.time_locktime = None
         self.height_locktime = None
+        self.musig2_participant_pubkeys.clear()
+        self.musig2_pub_nonces.clear()
+        self.musig2_partial_sigs.clear()
         self.unknown.clear()
 
     def deserialize(self, f: Readable) -> None:
@@ -582,6 +585,7 @@ class PartiallySignedOutput:
         self.tap_internal_key = b""
         self.tap_tree = b""
         self.tap_bip32_paths.clear()
+        self.musig2_participant_pubkeys.clear()
         self.amount = None
         self.script = b""
         self.unknown.clear()

@@ -16,7 +16,10 @@ on:
       - develop
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   guidelines_enforcer:
     name: Call Ledger guidelines_enforcer
-    uses: LedgerHQ/ledger-app-workflows/.github/workflows/reusable_guidelines_enforcer.yml@v1
+    uses: LedgerHQ/ledger-app-workflows/.github/workflows/reusable_guidelines_enforcer.yml@a26465ca60d8c4f0c4fa9f3f6a631f77d89f0f4b

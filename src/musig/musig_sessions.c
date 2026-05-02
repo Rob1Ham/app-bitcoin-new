@@ -90,14 +90,9 @@ void musigsession_initialize_signing_state(musig_signing_state_t *musig_signing_
 const musig_psbt_session_t *musigsession_round1_initialize(
     uint8_t psbt_session_id[static 32],
     musig_signing_state_t *musig_signing_state) {
-    // if an existing session for psbt_session_id exists, delete it
-    if (musigsession_pop(psbt_session_id, NULL)) {
-        // We wouldn't expect this: probably the client sent the same psbt for
-        // round 1 twice, without adding the pubnonces to the psbt after the first round.
-        // We delete the old session and start a fresh one, but we print a
-        // warning if in debug mode.
-        PRINTF("Session with the same id already existing\n");
-    }
+    // Do not mutate persistent storage during round 1 initialization.
+    // If this session is later committed, replacement of a same-id persisted
+    // session is handled by musigsession_store().
 
     if (memcmp(musig_signing_state->_round1._id, psbt_session_id, 32) != 0) {
         // first input/placeholder pair using this session: initialize the session

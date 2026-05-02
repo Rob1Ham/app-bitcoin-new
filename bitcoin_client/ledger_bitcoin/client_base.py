@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Tuple, Optional, Union, Literal
+from typing import List, Tuple, Optional, Union, Literal, cast
 from io import BytesIO
 
 from ledgercomm.interfaces.hid_device import HID
@@ -133,6 +133,15 @@ class UnknownSignPsbtYieldedObject:
 SignPsbtYieldedObject = Union[PartialSignature,
                               MusigPubNonce, MusigPartialSignature, UnknownSignPsbtYieldedObject]
 
+
+
+
+def normalize_chain_and_debug(chain: Union[Chain, bool], debug: bool) -> Tuple[Chain, bool]:
+    """Preserve backward compatibility for callers passing debug positionally."""
+    if isinstance(chain, bool):
+        return Chain.MAIN, chain
+
+    return cast(Chain, chain), debug
 
 class Client:
     def __init__(self, transport_client: TransportClient, chain: Chain = Chain.MAIN, debug: bool = False) -> None:

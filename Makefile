@@ -108,7 +108,7 @@ else
     endif
 endif
 
-ifneq (,$(filter-out clean,$(MAKECMDGOALS)))
+ifneq ($(MAKECMDGOALS),clean)
   ifeq ($(TARGET_NAME),TARGET_NANOS)
     $(error This branch is not compatible with the Nano S device. Checkout the 'nanos' branch for the latest code for Nano S.)
   endif

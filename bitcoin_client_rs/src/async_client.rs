@@ -281,6 +281,10 @@ impl<T: Transport> BitcoinClient<T> {
         // necessary for version 1 of the protocol (introduced in version 2.1.0)
         intpr.add_known_preimage(wallet.descriptor_template.as_bytes().to_vec());
 
+        if psbt.inputs.is_empty() || psbt.outputs.is_empty() {
+            return Err(BitcoinClientError::InvalidPsbt);
+        }
+
         let global_map: Vec<(Vec<u8>, Vec<u8>)> = get_v2_global_pairs(psbt)
             .into_iter()
             .map(deserialize_pair)

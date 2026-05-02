@@ -170,6 +170,10 @@ impl WalletPolicy {
         engine.input(&self.serialize());
         sha256::Hash::from_engine(engine).to_byte_array()
     }
+
+    pub(crate) fn contains_minscript_a(&self) -> bool {
+        self.descriptor_template.contains("a:")
+    }
 }
 
 #[derive(Debug)]

@@ -30,6 +30,7 @@ impl MerkleTree {
     /// Returns the root hash of the Merkle tree.
     pub fn root_hash(&self) -> &[u8; 32] {
         match &self.root {
+            Tree::Empty => &[0u8; 32],
             Tree::Node { value, .. } => value,
             Tree::Leaf(idx) => &self.leaves[*idx],
         }
@@ -58,6 +59,7 @@ impl MerkleTree {
 
 /// Tree is either a Node with children trees or a Leaf with only a given value.
 enum Tree {
+    Empty,
     Node {
         value: [u8; 32],
         left: Box<Tree>,
@@ -70,6 +72,10 @@ enum Tree {
 
 impl Tree {
     fn new(leaves: &[[u8; 32]], start: usize, size: usize) -> Self {
+        if size == 0 {
+            return Tree::Empty;
+        }
+
         if size == 1 {
             return Tree::Leaf(start);
         }
@@ -95,6 +101,7 @@ impl Tree {
 
     fn value<'a>(&'a self, leaves: &'a [[u8; 32]]) -> &'a [u8; 32] {
         match self {
+            Self::Empty => panic!("Empty tree has no value"),
             Self::Node { value, .. } => value,
             Self::Leaf(idx) => &leaves[*idx],
         }
@@ -102,6 +109,7 @@ impl Tree {
 
     fn height(&self) -> usize {
         match self {
+            Self::Empty => 0,
             Self::Node { height, .. } => *height,
             Self::Leaf(_) => 0,
         }
@@ -110,6 +118,7 @@ impl Tree {
     /// get the merkle proof of a leaf with the given index in the leaves array.
     fn get_proof(&self, leaves: &[[u8; 32]], index: usize) -> Vec<Vec<u8>> {
         match self {
+            Self::Empty => Vec::new(),
             Self::Leaf(_) => Vec::new(),
             Self::Node { left, right, .. } => {
                 let (mut proof, sibling) = if index < pow2(left.height()) {
@@ -120,6 +129,7 @@ impl Tree {
                 match **sibling {
                     Self::Node { value, .. } => proof.push(value.to_vec()),
                     Self::Leaf(idx) => proof.push(leaves[idx].to_vec()),
+                    Self::Empty => unreachable!("Empty subtree is not expected in non-empty proofs"),
                 }
                 proof
             }
@@ -172,6 +182,16 @@ mod tests {
     use super::*;
     use bitcoin::hashes::{sha256, Hash, HashEngine};
 
+
+    #[test]
+    fn test_merkle_tree_empty() {
+        let tree = MerkleTree::new(Vec::new());
+
+        assert_eq!(tree.size(), 0);
+        assert_eq!(tree.root_hash(), &[0u8; 32]);
+        assert_eq!(tree.get_leaf(0), None);
+        assert_eq!(tree.get_leaf_proof(0), None);
+    }
     #[test]
     fn test_merkle_tree() {
         let leaves = [

@@ -295,7 +295,12 @@ static bool __attribute__((noinline)) get_and_verify_key_info(dispatcher_context
 
     memcpy(&keyexpr_info->pubkey, &key_info.ext_pubkey, sizeof(serialized_extended_pubkey_t));
 
-    // the rest of the function verifies if the key is indeed internal, if it has our fingerprint
+    // the rest of the function verifies if the key is indeed internal, if it has
+    // key origin data and our fingerprint.
+    if (!key_info.has_key_origin) {
+        return false;
+    }
+
     uint32_t fpr = read_u32_be(key_info.master_key_fingerprint, 0);
     if (fpr != st->master_key_fingerprint) {
         return false;

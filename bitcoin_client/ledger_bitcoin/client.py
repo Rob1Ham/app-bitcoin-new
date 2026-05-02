@@ -273,6 +273,8 @@ class NewClient(Client):
 
     def sign_psbt(self, psbt: Union[PSBT, bytes, str], wallet: WalletPolicy, wallet_hmac: Optional[bytes]) -> List[Tuple[int, SignPsbtYieldedObject]]:
 
+        self._validate_policy(wallet)
+
         psbt = normalize_psbt(psbt)
 
         if psbt.version != 2:
@@ -372,6 +374,25 @@ class NewClient(Client):
             raise DeviceException(error_code=sw, ins=BitcoinInsType.SIGN_MESSAGE)
 
         return base64.b64encode(response).decode('utf-8')
+
+
+    def _contains_a_fragment(self, wallet: WalletPolicy) -> bool:
+        policy_map = wallet.descriptor_template.translate(str.maketrans({"{":"(", "}":")"}))
+
+        while len(policy_map) != 0:
+            if policy_map.startswith("a:"):
+                return True
+
+            policy_map = policy_map[1:]
+
+        return False
+
+    def _validate_policy(self, wallet: WalletPolicy):
+        app_version = parse_version(self.get_version()[1])
+
+        if app_version in [parse_version("2.1.0"), parse_version("2.1.1")]:
+            if self._contains_a_fragment(wallet):
+                raise ValueError("The version of the Bitcoin app on your Ledger does not support this policy. Please update the app to version 2.1.2 or later.")
 
     def _derive_address_for_policy(self, wallet: WalletPolicy, change: bool, address_index: int) -> Optional[str]:
         desc_str = wallet.get_descriptor(change)

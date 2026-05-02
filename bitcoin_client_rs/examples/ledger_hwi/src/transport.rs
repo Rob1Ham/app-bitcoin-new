@@ -17,6 +17,8 @@ use ledger_bitcoin_client::{
     async_client::Transport,
 };
 
+const MAX_SPECULOS_RESPONSE_LEN: u32 = 65_535;
+
 /// Transport with the Ledger device.
 pub struct TransportHID(TransportNativeHID);
 
@@ -80,6 +82,9 @@ impl Transport for TransportTcp {
             4 => u32::from_be_bytes(buff),
             _ => return Err("Invalid Length".into()),
         };
+        if len > MAX_SPECULOS_RESPONSE_LEN {
+            return Err(format!("Speculos response too large: {len}").into());
+        }
 
         let mut resp = vec![0u8; len as usize + 2];
         stream.read_exact(&mut resp).await?;

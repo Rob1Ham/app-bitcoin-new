@@ -314,8 +314,11 @@ void ui_display_pubkey_flow(void) {
 
     nbgl_useCaseReviewLight(TYPE_OPERATION,
                             &pairList,
-                            &ICON_APP_ACTION,
-                            "Confirm public key",
+                            g_ui_state.path_and_pubkey.is_path_suspicious ? &ICON_APP_WARNING
+                                                                          : &ICON_APP_ACTION,
+                            g_ui_state.path_and_pubkey.is_path_suspicious
+                                ? "The derivation path\nis unusual"
+                                : "Confirm public key",
                             NULL,
                             "Approve public key",
                             status_operation_callback);

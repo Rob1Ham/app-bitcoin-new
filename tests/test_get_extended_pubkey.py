@@ -61,17 +61,14 @@ def test_get_extended_pubkey_standard_nodisplay(client: RaggerClient):
 
 
 def test_get_extended_pubkey_exception_nodisplay(client: RaggerClient):
-    # as these paths are not standard, the app should reject immediately if display=False
-    testcases = {
-        # Electrum path exception
-        "m/4541509'/1112098098'": "tpubDAs3mrkQXkGyzp7Yo9SXiZNW7Tmia5EmdUpXjuBQvBDDGGr9CnVHehSB6P5RZFY3bwkYBweXir8MhmvPXqYHHVxKrFkm3mfZ5UkjG5ZH8Ui",
-    }
-
-    for path, pubkey in testcases.items():
-        assert pubkey == client.get_extended_pubkey(
-            path=path,
+    # Electrum's historical encryption path is non-standard and should be rejected if display=False
+    with pytest.raises(ExceptionRAPDU) as e:
+        client.get_extended_pubkey(
+            path="m/4541509'/1112098098'",
             display=False
         )
+    assert DeviceException.exc.get(e.value.status) == NotSupportedError
+    assert len(e.value.data) == 0
 
 
 def test_get_extended_pubkey_nonstandard_nodisplay(client: RaggerClient):

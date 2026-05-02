@@ -34,13 +34,6 @@
 #define H 0x80000000ul
 
 static bool is_path_safe_for_pubkey_export(const uint32_t bip32_path[], size_t bip32_path_len) {
-    // Exception for Electrum: it historically used "m/4541509h/1112098098h"
-    // to derive encryption keys, so we whitelist it.
-    if (bip32_path_len == 2 && bip32_path[0] == (4541509 ^ H) &&
-        bip32_path[1] == (1112098098 ^ H)) {
-        return true;
-    }
-
     if (bip32_path_len < 3) {
         return false;
     }

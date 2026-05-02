@@ -6,7 +6,7 @@
 /**
  * Returns the size in bytes of a bitvector that can contain n bits.
  */
-#define BITVECTOR_REAL_SIZE(n) ((n + 7) / 8)
+#define BITVECTOR_REAL_SIZE(n) (((n) + 7) / 8)
 
 /**
  * Returns the value in the `i`-th position of the vector of bits.

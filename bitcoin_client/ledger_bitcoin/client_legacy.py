@@ -30,7 +30,7 @@ from .btchip.bitcoinTransaction import bitcoinTransaction
 def get_address_type_for_policy(policy: WalletPolicy) -> AddressType:
     if policy.descriptor_template in ["pkh(@0/**)", "pkh(@0/<0;1>/*)"]:
         return AddressType.LEGACY
-    elif policy.descriptor_template in ["wpkh(@0/**)", "wpkh(@0/<0:1>/*)"]:
+    elif policy.descriptor_template in ["wpkh(@0/**)", "wpkh(@0/<0;1>/*)"]:
         return AddressType.WIT
     elif policy.descriptor_template in ["sh(wpkh(@0/**))", "sh(wpkh(@0/<0;1>/*))"]:
         return AddressType.SH_WIT

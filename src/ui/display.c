@@ -98,7 +98,8 @@ static bool io_ui_process(dispatcher_context_t *context) {
 
 bool ui_display_pubkey(dispatcher_context_t *context,
                        const char *bip32_path_str,
-                       const char *pubkey) {
+                       const char *pubkey,
+                       bool is_path_suspicious) {
 #ifdef HAVE_AUTOAPPROVE_FOR_PERF_TESTS
     return true;
 #endif
@@ -107,6 +108,7 @@ bool ui_display_pubkey(dispatcher_context_t *context,
 
     strncpy(state->bip32_path_str, bip32_path_str, sizeof(state->bip32_path_str));
     strncpy(state->pubkey, pubkey, sizeof(state->pubkey));
+    state->is_path_suspicious = is_path_suspicious;
 
     ui_display_pubkey_flow();
 

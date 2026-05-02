@@ -60,6 +60,7 @@ typedef struct {
 typedef struct {
     char bip32_path_str[MAX_SERIALIZED_BIP32_PATH_LENGTH + 1];
     char pubkey[MAX_SERIALIZED_PUBKEY_LENGTH + 1];
+    bool is_path_suspicious;
 } ui_path_and_pubkey_state_t;
 
 typedef struct {
@@ -138,7 +139,8 @@ typedef void (*action_validate_cb)(dispatcher_context_t *dispatcher_context, boo
  */
 bool ui_display_pubkey(dispatcher_context_t *context,
                        const char *bip32_path_str,
-                       const char *pubkey);
+                       const char *pubkey,
+                       bool is_path_suspicious);
 
 bool ui_display_message_and_confirm(dispatcher_context_t *context,
                                     const char *path_str,

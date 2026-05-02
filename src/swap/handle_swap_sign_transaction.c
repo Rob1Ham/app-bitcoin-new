@@ -30,6 +30,10 @@ bool swap_copy_transaction_parameters(create_transaction_parameters_t* sign_tran
     memset(destination_address_extra_data, 0, sizeof(destination_address_extra_data));
     memset(amount, 0, sizeof(amount));
     memset(fees, 0, sizeof(fees));
+
+    // Default to failure until the signing flow completes and explicitly sets success.
+    sign_transaction_params->result = false;
+
     strncpy(destination_address,
             sign_transaction_params->destination_address,
             sizeof(destination_address) - 1);

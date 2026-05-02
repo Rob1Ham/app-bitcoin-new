@@ -165,11 +165,14 @@ def _decode_signpsbt_yielded_value(res: bytes) -> Tuple[int, SignPsbtYieldedObje
 
 
 
+
+
 class NewClient(Client):
     # internal use for testing: if set to True, sign_psbt will not clone the psbt before converting to psbt version 2
     _no_clone_psbt: bool = False
 
-    def __init__(self, comm_client: TransportClient, chain: Chain = Chain.MAIN, debug: bool = False) -> None:
+    def __init__(self, comm_client: TransportClient, chain: Union[Chain, bool] = Chain.MAIN, debug: bool = False) -> None:
+        chain, debug = normalize_chain_and_debug(chain, debug)
         super().__init__(comm_client, chain, debug)
         self.builder = BitcoinCommandBuilder()
 
@@ -390,9 +393,11 @@ class NewClient(Client):
             return None
 
 
-def createClient(comm_client: Optional[TransportClient] = None, chain: Chain = Chain.MAIN, debug: bool = False) -> Union[LegacyClient, NewClient]:
+def createClient(comm_client: Optional[TransportClient] = None, chain: Union[Chain, bool] = Chain.MAIN, debug: bool = False) -> Union[LegacyClient, NewClient]:
     if comm_client is None:
         comm_client = TransportClient("hid")
+
+    chain, debug = normalize_chain_and_debug(chain, debug)
 
     base_client = Client(comm_client, chain, debug)
     app_name, app_version, _ = base_client.get_version()

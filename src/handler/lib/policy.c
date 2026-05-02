@@ -335,23 +335,29 @@ int read_and_parse_wallet_policy(
         return WITH_ERROR(-1, "Failed reading wallet policy header");
     }
 
+    size_t descriptor_template_len = wallet_header->descriptor_template_len;
+
     if (wallet_header->version == WALLET_POLICY_VERSION_V1) {
         memcpy(policy_map_descriptor_template,
                wallet_header->descriptor_template,
                wallet_header->descriptor_template_len);
     } else {
         // if V2, stream and parse descriptor template from client first
-        int descriptor_template_len = call_get_preimage(dispatcher_context,
-                                                        wallet_header->descriptor_template_sha256,
-                                                        policy_map_descriptor_template,
-                                                        MAX_DESCRIPTOR_TEMPLATE_LENGTH);
-        if (descriptor_template_len < 0) {
+        int preimage_len = call_get_preimage(dispatcher_context,
+                                             wallet_header->descriptor_template_sha256,
+                                             policy_map_descriptor_template,
+                                             MAX_DESCRIPTOR_TEMPLATE_LENGTH);
+        if (preimage_len < 0) {
             return WITH_ERROR(-1, "Failed getting wallet policy descriptor template");
         }
+        if ((size_t) preimage_len != wallet_header->descriptor_template_len) {
+            return WITH_ERROR(-1, "Descriptor template length mismatch");
+        }
+        descriptor_template_len = (size_t) preimage_len;
     }
 
     buffer_t policy_map_buffer =
-        buffer_create(policy_map_descriptor_template, wallet_header->descriptor_template_len);
+        buffer_create(policy_map_descriptor_template, descriptor_template_len);
 
     int desc_temp_len = parse_descriptor_template(&policy_map_buffer,
                                                   policy_map_bytes,

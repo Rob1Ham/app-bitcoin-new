@@ -230,12 +230,16 @@ fn extract_keys_and_template(policy: &str) -> Result<(String, Vec<WalletPubKey>)
     let re = Regex::new(r"((\[.+?\])?[xyYzZtuUvV]pub[1-9A-HJ-NP-Za-km-z]{79,108})").unwrap();
     let mut descriptor_template = policy.to_string();
     let mut pubkeys: Vec<WalletPubKey> = Vec::new();
-    for (index, capture) in re.find_iter(policy).enumerate() {
+    for capture in re.find_iter(policy) {
         let pubkey = WalletPubKey::from_str(capture.as_str()).map_err(|e| format!("{}", e))?;
-        if !pubkeys.contains(&pubkey) {
+        let key_index = if let Some(index) = pubkeys.iter().position(|key| key == &pubkey) {
+            index
+        } else {
             pubkeys.push(pubkey);
-        }
-        descriptor_template = descriptor_template.replace(capture.as_str(), &format!("@{}", index));
+            pubkeys.len() - 1
+        };
+        descriptor_template =
+            descriptor_template.replace(capture.as_str(), &format!("@{}", key_index));
     }
     if let Some((descriptor_template, _hash)) = descriptor_template.rsplit_once("#") {
         Ok((descriptor_template.to_string(), pubkeys))

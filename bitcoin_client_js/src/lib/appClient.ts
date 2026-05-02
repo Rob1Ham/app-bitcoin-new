@@ -17,6 +17,18 @@ const CLA_FRAMEWORK = 0xf8;
 
 const CURRENT_PROTOCOL_VERSION = 1; // supported from version 2.1.0 of the app
 
+function compareVersionStrings(a: string, b: string): number {
+  const pa = a.split('.').map((part) => parseInt(part, 10));
+  const pb = b.split('.').map((part) => parseInt(part, 10));
+  const length = Math.max(pa.length, pb.length);
+  for (let i = 0; i < length; i++) {
+    const va = Number.isNaN(pa[i]) ? 0 : pa[i];
+    const vb = Number.isNaN(pb[i]) ? 0 : pb[i];
+    if (va !== vb) return va - vb;
+  }
+  return 0;
+}
+
 enum BitcoinIns {
   GET_PUBKEY = 0x00,
   REGISTER_WALLET = 0x02,
@@ -408,6 +420,26 @@ export class AppClient {
   }
 
   /* Performs any additional check on the generated address before returning it.*/
+  private validatePolicy(walletPolicy: WalletPolicy, appVersion: string): void {
+    if (
+      compareVersionStrings(appVersion, '2.1.1') <= 0 &&
+      walletPolicy.descriptorTemplate.includes('a:')
+    ) {
+      throw new Error(
+        `Policy uses unsupported miniscript fragment for app version ${appVersion}: ${walletPolicy.descriptorTemplate}`
+      );
+    }
+
+    if (
+      compareVersionStrings(appVersion, '2.1.2') <= 0 &&
+      /thresh\(\s*1\s*,/.test(walletPolicy.descriptorTemplate)
+    ) {
+      throw new Error(
+        `Policy uses unsupported miniscript threshold for app version ${appVersion}: ${walletPolicy.descriptorTemplate}`
+      );
+    }
+  }
+
   private async validateAddress(
     address: string,
     walletPolicy: WalletPolicy,
@@ -457,8 +489,8 @@ export class AppClient {
       }).getAddress();
     } catch (err) {
       // If this descriptor cannot be interpreted by @bitcoinerlab/descriptors,
-      // third-party validation is not applicable.
-      console.warn(`Third-party address validation unavailable for this descriptor. Address: ${address}`, err);
+      // apply policy-level checks for known vulnerable app versions.
+      this.validatePolicy(walletPolicy, appAndVer.version);
       thirdPartyValidationApplicable = false;
     }
     if (

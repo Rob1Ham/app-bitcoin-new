@@ -164,8 +164,10 @@ async fn sign<T: Transport>(
     let (descriptor_template, keys) = extract_keys_and_template(policy)?;
     let wallet = WalletPolicy::new(name.to_string(), Version::V2, descriptor_template, keys);
     let hmac = if let Some(s) = hmac {
-        let mut h = [b'\0'; 32];
-        h.copy_from_slice(&Vec::from_hex(&s).map_err(|e| format!("{:#?}", e))?);
+        let h = Vec::from_hex(s).map_err(|e| format!("{:#?}", e))?;
+        let h: [u8; 32] = h
+            .try_into()
+            .map_err(|_| "hmac must decode to exactly 32 bytes")?;
         Some(h)
     } else {
         None

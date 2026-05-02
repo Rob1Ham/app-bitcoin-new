@@ -30,11 +30,14 @@ static void test_bitvector_size(void **state) {
     (void) state;
 
     for (unsigned int i = 0; i < 10; i++) {
-        for (unsigned int b = 1; i <= 8; i++) {
+        for (unsigned int b = 1; b <= 8; b++) {
             unsigned int n = i * 8 + b;
             assert_int_equal(BITVECTOR_REAL_SIZE(n), i + 1);
         }
     }
+
+    assert_int_equal(BITVECTOR_REAL_SIZE(1 << 3), 1);
+    assert_int_equal(BITVECTOR_REAL_SIZE(1 ? 9 : 0), 2);
 }
 
 static void test_bitvector_get(void **state) {
